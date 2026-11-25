@@ -112,7 +112,7 @@ input[type=range]{width:100%;accent-color:var(--acc);height:28px}
       <button class="btn" id="tap">탭해서 재기</button>
     </div>
   </div>
-  <p class="note">강박은 높은 소리와 주홍 점, 6/8·9/8·12/8의 둘째 이후 큰 박은 중간 소리와 노란 점으로 들립니다. 아이폰에서 소리가 안 나면 옆면 무음 스위치를 확인하세요. 키보드에서는 스페이스로 켜고 끄고, ← → 로 1씩 바꾸고, T로 탭합니다.</p>
+  <p class="note">강박은 높은 소리와 주홍 점, 6/8·9/8·12/8의 둘째 이후 큰 박은 중간 소리와 노란 점으로 들립니다. 아이폰은 무음 모드에서도 소리가 나게 해 두었습니다. 그래도 안 나면 볼륨을 올려 주세요. 키보드에서는 스페이스로 켜고 끄고, ← → 로 1씩 바꾸고, T로 탭합니다.</p>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -195,7 +195,16 @@ function frame(){
   }
   raf=requestAnimationFrame(frame);
 }
+/* 아이폰: 무음 스위치가 켜져 있어도 소리가 나도록 '음악 재생'으로 동작하게 함
+   (Safari 17+ audioSession, 그 이전은 소리 없는 오디오를 함께 틀어 재생 모드로 전환) */
+function unlockIOSAudio(){
+  try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  try{ if(!unlockIOSAudio.el){ const a=document.createElement('audio'); a.src='data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA=='; a.loop=true; a.setAttribute('playsinline',''); a.volume=0.01; unlockIOSAudio.el=a; }
+    const p=unlockIOSAudio.el.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+}
+function releaseIOSAudio(){ try{ unlockIOSAudio.el && unlockIOSAudio.el.pause(); }catch(e){} }
 function start(){
+  unlockIOSAudio();
   try{ ac = ac || new (window.AudioContext||window.webkitAudioContext)(); if(ac.resume) ac.resume(); }
   catch(e){ toast('이 기기에서는 소리를 낼 수 없습니다'); return; }
   playing=true; beatN=0; queue=[]; nextT=ac.currentTime+0.06;
@@ -203,7 +212,7 @@ function start(){
   $('#play').textContent='■ 멈추기'; $('#play').classList.add('stop');
 }
 function stop(){
-  playing=false; clearInterval(timer); cancelAnimationFrame(raf); queue=[];
+  releaseIOSAudio(); playing=false; clearInterval(timer); cancelAnimationFrame(raf); queue=[];
   $('#arm').setAttribute('transform','rotate(0 150 292)'); [...$('#dots').children].forEach(d=>d.classList.remove('on'));
   $('#play').textContent='▶ 박자 듣기'; $('#play').classList.remove('stop');
 }
