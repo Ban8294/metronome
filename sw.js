@@ -1,6 +1,6 @@
 /* 찬양 메트로놈 오프라인 캐시: 한 번 열면 인터넷 없이도 열림.
    페이지를 고쳐 다시 올릴 때는 VERSION 숫자를 올리면 새 버전으로 바뀝니다. */
-const VERSION = 'metro-v1';
+const VERSION = 'metro-v2';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
